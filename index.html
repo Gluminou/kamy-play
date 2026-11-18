@@ -260,7 +260,7 @@
         <li>Dépasser l'adversaire : il perd tes AP.</li>
         <li>T'arrêter sur sa case : il perd le double de tes AP.</li>
         <li>Bannière : frappe l'adversaire à 6 cases ou moins.</li>
-        <li>Critter : joue une carte de déplacement et obtiens un résultat gagnant. Échec : -2 HP.</li>
+        <li>Critter : joue une carte de déplacement et obtiens un résultat gagnant. Plus il est rare, plus il rapporte d'or et d'AP. Échec : -2 HP.</li>
         <li>Base adverse : sa tourelle te frappe si tu t'y arrêtes.</li>
       </ul></div>
       <div class="box"><ul>
@@ -282,7 +282,7 @@
 </div>
 
 <script>
-const APP_VERSION = "0.1.1";
+const APP_VERSION = "0.1.2";
 
 /* ENGINE:START */
 // Moteur de règles de Kamy : aucune dépendance au navigateur, pour pouvoir le simuler.
@@ -292,8 +292,11 @@ const Kamy = (() => {
     'base', 'or', 'critter_c', 'piege', 'soin', 'or', 'banniere', 'tp', 'attaque', 'marchand', 'or', 'attaque'];
   const TP = { 7: 19, 19: 7 };
   const CRITTERS = {
-    critter_c: { name: 'Critter commun', rarity: 'Commun', wins: [2, 3, 4, 5, 6], gold: 2, ap: 0 },
-    critter_r: { name: 'Critter rare', rarity: 'Rare', wins: [5, 6], gold: 4, ap: 1 },
+    // Plus le critter est rare, plus il rapporte d'or et d'AP. Moyen et légendaire ne sont pas encore sur le plateau.
+    critter_c: { name: 'Critter commun', rarity: 'Commun', wins: [2, 3, 4, 5, 6], gold: 1, ap: 1 },
+    critter_m: { name: 'Critter moyen', rarity: 'Moyen', wins: [3, 4, 5, 6], gold: 3, ap: 1 },
+    critter_r: { name: 'Critter rare', rarity: 'Rare', wins: [5, 6], gold: 7, ap: 2 },
+    critter_l: { name: 'Critter légendaire', rarity: 'Légendaire', wins: [6], gold: 16, ap: 4 },
   };
   const V = {
     hp: 30, ap: 3, gold: 5, orGain: 2, passiveGold: 1, soin: 4, piege: 3, passBase: 3, critterFail: 2,
@@ -672,8 +675,8 @@ const TILE_META = {
   attaque: { label: 'Attaque : +1 AP', glyph: '»', color: '#FF4A4A' },
   piege: { label: 'Piège : -3 HP', glyph: '!', color: '#FF4A4A', outline: true },
   banniere: { label: 'Bannière : AP à 6 cases', glyph: '⚑', color: '#FF4A4A' },
-  critter_c: { label: 'Critter commun : 2 à 6', glyph: 'C', color: '#8B7CFF' },
-  critter_r: { label: 'Critter rare : 5 ou 6', glyph: 'R', color: '#8B7CFF' },
+  critter_c: { label: 'Commun : +1 or, +1 AP', glyph: 'C', color: '#8B7CFF' },
+  critter_r: { label: 'Rare : +7 or, +2 AP', glyph: 'R', color: '#8B7CFF' },
   tp: { label: 'Téléportation 7 ↔ 19', glyph: '◎', color: '#8B7CFF' },
   marchand: { label: 'Marchand', glyph: '▣', color: '#FFC23D', outline: true },
 };
@@ -739,7 +742,7 @@ function renderHud() {
     $(`#${k}Base`).innerHTML = pips(p);
   }
   const b = bot();
-  $('#bCd').textContent = `TIR ${b.cd.tir || '✓'} · +2 ${b.cd.propulsion || '✓'}`;
+  $('#bCd').textContent = `TIR ${b.cd.tir || '✓'} +2 ${b.cd.propulsion || '✓'}`;
   const P = me(), myTurn = ui.phase === 'choose';
   for (const [key, btn, cd] of [['tir', '#actTir', '#cdTir'], ['propulsion', '#actProp', '#cdProp']]) {
     $(btn).disabled = !(myTurn && Kamy.canUseActive(G, P, key));
