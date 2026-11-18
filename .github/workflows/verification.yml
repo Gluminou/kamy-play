@@ -1,0 +1,26 @@
+name: Vérification
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  verifier:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      # Aucune génération dans ce dépôt : index.html est une copie du dossier prototype/
+      # du dépôt privé Kamy, où vivent la simulation des règles et le test de partie complète.
+
+      - name: Installer le navigateur
+        run: |
+          npm install --no-save 'playwright@^1'
+          npx playwright install --with-deps chromium
+
+      - name: Syntaxe, versions, chargement et fichiers manquants
+        run: node .github/verify.mjs .

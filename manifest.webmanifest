@@ -1,0 +1,16 @@
+{
+  "name": "Kamy",
+  "short_name": "Kamy",
+  "description": "Prototype de règles de Kamy : duel contre un bot.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "landscape",
+  "background_color": "#0A0F1E",
+  "theme_color": "#0A0F1E",
+  "lang": "fr",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}
