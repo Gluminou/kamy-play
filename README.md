@@ -1,4 +1,4 @@
-# Kamy · prototype jouable (kami-play)
+# Kamy · prototype jouable (kamy-play)
 
 Prototype de règles de Kamy : un duel en paysage contre un bot.
 
