@@ -161,6 +161,18 @@
   #endScreen .box { max-width: 520px; margin: 10px auto; text-align: left; }
   #logFull { left: 236px; top: 46px; width: 330px; height: 214px; background: #0F1736; border: 2px solid var(--line); border-radius: 14px; padding: 8px 12px; z-index: 30; display: none; font-size: 13px; overflow: auto; }
   #logFull.show { display: block; }
+  .pgrid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; margin-top: 6px; }
+  .pcard { height: 104px; display: flex; flex-direction: column; align-items: flex-start; gap: 3px; padding: 8px; text-align: left; border: 2px solid var(--line); background: #10183A; border-radius: 10px; }
+  .pcard.on { border-color: var(--gold); background: #2a2210; }
+  .pcard .sicon { font: 800 18px var(--title); color: var(--gold); }
+  .pcard .sname { font: 800 10px var(--title); color: var(--gold); letter-spacing: 1px; }
+  .pcard .pdesc { font: 500 12px/1.15 var(--body); color: var(--text); }
+  #prepCount { font: 800 13px var(--title); color: var(--gold); }
+  #statsScreen .box { font-size: 12.5px; }
+  #statsScreen table { border-collapse: collapse; width: 100%; font-size: 12px; }
+  #statsScreen td, #statsScreen th { padding: 2px 4px; text-align: left; border-bottom: 1px solid var(--line); }
+  #statsScreen th { color: var(--muted); font-weight: 700; }
+  #statsDump { width: 100%; height: 70px; display: none; background: #0e1530; color: var(--text); border: 1px solid var(--line); font-size: 10px; }
   #rotate { position: fixed; inset: 0; background: var(--bg); z-index: 100; display: none; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 30px; font-size: 18px; }
   #rotate.show { display: flex; }
   #rotate .ico { font-size: 54px; margin-bottom: 10px; }
@@ -236,12 +248,13 @@
     <div class="cols">
       <div class="box"><b>TON PERSONNAGE · NOVA-7</b><br>Androïde éclaireur. 30 HP, 3 AP, 5 or.<br>Passive : +1 or sur chaque case or.<br>Tir ionique : 3 dégâts à 5 cases ou moins.<br>Propulsion : +2 cases à ce tour.<br>Une compétence active par tour, puis 3 tours de recharge.</div>
       <div class="box"><b>TA BASE · AVANT-POSTE ORBITAL</b><br>Y passer : +3 or. S'y arrêter : une amélioration (3, 6 puis 9 or).<br>Tourelle : frappe l'adversaire qui s'y arrête.<br>Générateur : or en plus à chaque passage.<br>Infirmerie : HP rendus à chaque passage.</div>
-      <div class="box"><b>TON DECK · 23 CARTES</b><br>18 cartes de déplacement : 4 aléa (1 à 6), 2 low, 2 high, 2 odd, 2 even, et une carte fixe de 1 à 6.<br>5 cartes spéciales : -1, +1, potion, bouclier, relance.<br>4 cartes en main, 1 pioche par tour.</div>
+      <div class="box"><b>TON DECK · 23 CARTES</b><br>18 cartes de déplacement : 4 aléa (1 à 6), 2 low, 2 high, 2 odd, 2 even, et une carte fixe de 1 à 6.<br>5 cartes spéciales, choisies parmi 10 avant chaque duel.<br>4 cartes en main, 1 pioche par tour.</div>
     </div>
     <div class="foot">
-      <button class="primary" id="startBtn">Lancer le duel</button>
+      <button class="primary" id="startBtn">Préparer le duel</button>
       <label><input type="checkbox" id="discovery" checked> Mode découverte (25 s par tour au lieu de 15 s)</label>
       <button id="rulesBtn">Règles</button>
+      <button id="statsBtn">Statistiques</button>
       <span class="ver" id="verLbl"></span>
     </div>
   </div>
@@ -250,6 +263,7 @@
     <h2>RÈGLES DU PROTOTYPE</h2>
     <div class="cols">
       <div class="box"><ul>
+        <li>Avant le duel, choisis 5 cartes spéciales parmi 10.</li>
         <li>Un dé désigne qui commence.</li>
         <li>À chaque tour : pioche 1 carte, puis joue <b>obligatoirement</b> une carte de déplacement en la glissant au centre.</li>
         <li>Avant de bouger, tu peux lancer une compétence active et jouer <b>une</b> carte spéciale.</li>
@@ -271,18 +285,44 @@
         <li>Le premier à 0 HP perd.</li>
       </ul></div>
     </div>
-    <div class="foot"><button class="primary" id="rulesClose">Fermer</button></div>
+    <div class="foot"><button class="primary" id="rulesClose">Fermer</button><button id="quitBtn" hidden>Abandonner la partie</button></div>
+  </div>
+
+  <div id="prepScreen" class="screen">
+    <h2>PRÉPARER LE DUEL · CHOISIS 5 CARTES SPÉCIALES</h2>
+    <div class="pgrid" id="prepGrid"></div>
+    <div class="foot">
+      <button class="primary" id="goBtn">Lancer le duel</button>
+      <span id="prepCount"></span>
+      <button id="prepBack">Retour</button>
+      <span class="ver">Le bot reçoit 5 cartes au hasard.</span>
+    </div>
+  </div>
+
+  <div id="statsScreen" class="screen">
+    <h2>STATISTIQUES DES PARTIES JOUÉES SUR CET APPAREIL</h2>
+    <div class="cols">
+      <div class="box" id="statsSummary" style="flex:0.8"></div>
+      <div class="box" id="statsCards" style="flex:1.2"></div>
+    </div>
+    <textarea id="statsDump" readonly aria-label="Données des parties"></textarea>
+    <div class="foot">
+      <button class="primary" id="statsClose">Fermer</button>
+      <button id="statsCopy">Copier les données</button>
+      <button id="statsClear">Effacer</button>
+      <span id="statsMsg" class="ver"></span>
+    </div>
   </div>
 
   <div id="endScreen" class="screen">
     <div class="res" id="endRes"></div>
     <div class="box" id="endBox"></div>
-    <div class="foot" style="justify-content:center"><button class="primary" id="againBtn">Rejouer</button></div>
+    <div class="foot" style="justify-content:center"><span style="font-size:17px;font-weight:700">Rejouer une partie maintenant ?</span><button class="primary" id="replayYes">Oui</button><button id="replayNo">Non</button></div>
   </div>
 </div>
 
 <script>
-const APP_VERSION = "0.1.3";
+const APP_VERSION = "0.2.0";
 
 /* ENGINE:START */
 // Moteur de règles de Kamy : aucune dépendance au navigateur, pour pouvoir le simuler.
@@ -320,7 +360,14 @@ const Kamy = (() => {
     potion: { name: 'POTION', icon: '✚', desc: 'Rend 5 HP' },
     bouclier: { name: 'BOUCLIER', icon: '⬡', desc: 'Annule la prochaine attaque' },
     relance: { name: 'RELANCE', icon: '↺', desc: 'Relance un lancer variable' },
+    impact: { name: 'IMPACT', icon: '+3', desc: '+3 à chaque dégât ce tour' },
+    recharge: { name: 'RECHARGE', icon: '⟳', desc: 'Recharge tes compétences' },
+    minage: { name: 'MINAGE', icon: '¤', desc: 'Or = déplacement, case ignorée' },
+    pillage: { name: 'PILLAGE', icon: '⇄', desc: "Vole 3 or à l'adversaire" },
+    entrave: { name: 'ENTRAVE', icon: '-2', desc: '-2 au prochain déplacement adverse' },
   };
+  const DEFAULT_LOADOUT = ['moins', 'plus', 'potion', 'bouclier', 'relance'];
+  const LOADOUT_SIZE = 5, IMPACT_BONUS = 3, PILLAGE = 3, ENTRAVE = 2;
 
   function rngFrom(seed) {
     let a = (seed >>> 0) || 1;
@@ -342,21 +389,26 @@ const Kamy = (() => {
   const isMove = c => c.kind === 'move';
   const log = (s, txt, who = null) => s.log.push({ n: s.turn, txt, who });
   const fx = (s, target, text, kind) => s.fx.push({ target, text, kind });
-  const freshFlags = () => ({ active: false, special: false, mod: 0, propulsion: false });
+  const freshFlags = () => ({ active: false, special: false, mod: 0, propulsion: false, impact: false, minage: false });
 
   function makeSpecial(s, type) { return { id: ++s.uid, kind: 'special', type, label: SPECIALS[type].name }; }
-  function makeDeck(s) {
+  function validLoadout(l) {
+    return Array.isArray(l) && l.length === LOADOUT_SIZE && new Set(l).size === LOADOUT_SIZE && l.every(t => SPECIALS[t]);
+  }
+  function makeDeck(s, loadout) {
     const deck = [];
     for (const [type, label, faces, count] of MOVES) for (let i = 0; i < count; i++) deck.push({ id: ++s.uid, kind: 'move', type, label, faces });
-    for (const type of Object.keys(SPECIALS)) deck.push(makeSpecial(s, type));
+    for (const type of loadout) deck.push(makeSpecial(s, type));
     return shuffle(s, deck);
   }
-  function makePlayer(s, idx, isBot) {
+  function makePlayer(s, idx, isBot, loadout) {
+    const lo = validLoadout(loadout) ? loadout.slice() : DEFAULT_LOADOUT.slice();
     return {
+      loadout: lo, entrave: 0,
       idx, isBot, name: idx === 0 ? (isBot ? 'Bot A' : 'Toi') : 'Bot', home: idx === 0 ? 0 : 12, pos: idx === 0 ? 0 : 12,
-      hp: V.hp, maxHp: V.hp, ap: V.ap, gold: V.gold, deck: makeDeck(s), hand: [], discard: [], shield: false,
+      hp: V.hp, maxHp: V.hp, ap: V.ap, gold: V.gold, deck: makeDeck(s, lo), hand: [], discard: [], shield: false,
       cd: { tir: 0, propulsion: 0 }, base: { tourelle: 0, generateur: 0, infirmerie: 0 }, flags: freshFlags(),
-      stats: { turns: 0, dealt: {} },
+      stats: { turns: 0, dealt: {}, drawn: {}, played: {} },
     };
   }
 
@@ -366,7 +418,9 @@ const Kamy = (() => {
       p.deck = shuffle(s, p.discard); p.discard = [];
       log(s, `${p.name} remélange sa défausse.`, p.idx);
     }
-    const c = p.deck.pop(); p.hand.push(c); return c;
+    const c = p.deck.pop(); p.hand.push(c);
+    if (c.kind === 'special') p.stats.drawn[c.type] = (p.stats.drawn[c.type] || 0) + 1;
+    return c;
   }
 
   function createGame(opts = {}) {
@@ -374,7 +428,8 @@ const Kamy = (() => {
       uid: 0, rng: rngFrom(opts.seed != null ? opts.seed : Math.floor(Math.random() * 4294967296)),
       turn: 0, current: 0, winner: null, log: [], fx: [], pending: null, dmgBySource: {},
     };
-    s.players = [makePlayer(s, 0, !!opts.botVsBot), makePlayer(s, 1, true)];
+    const lo = opts.loadouts || [];
+    s.players = [makePlayer(s, 0, !!opts.botVsBot, lo[0]), makePlayer(s, 1, true, lo[1])];
     for (const p of s.players) for (let i = 0; i < V.startHand; i++) drawOne(s, p);
     let a, b;
     do { a = 1 + Math.floor(s.rng() * 6); b = 1 + Math.floor(s.rng() * 6); } while (a === b);
@@ -394,6 +449,7 @@ const Kamy = (() => {
 
   function damage(s, src, tgt, amount, label, blockable) {
     if (s.winner || amount <= 0) return 0;
+    if (src && src === cur(s) && src.flags.impact) { amount += IMPACT_BONUS; label += ' + impact'; }
     if (blockable && tgt.shield) {
       tgt.shield = false;
       log(s, `${tgt.name} bloque « ${label} » avec son bouclier.`, tgt.idx); fx(s, tgt.idx, 'BLOQUÉ', 'shield');
@@ -432,12 +488,24 @@ const Kamy = (() => {
     const c = p.hand[i];
     if (c.kind !== 'special' || p.flags.special || c.type === 'relance') return false;
     if (c.type === 'bouclier' && p.shield) return false;
+    const o = other(s, p);
+    if (c.type === 'entrave' && o.entrave) return false;
     p.hand.splice(i, 1); p.discard.push(c); p.flags.special = true;
+    p.stats.played[c.type] = (p.stats.played[c.type] || 0) + 1;
     log(s, `${p.name} joue la carte ${c.label}.`, p.idx);
     if (c.type === 'moins') { p.flags.mod -= 1; fx(s, p.idx, '-1 case', 'buff'); }
     else if (c.type === 'plus') { p.flags.mod += 1; fx(s, p.idx, '+1 case', 'buff'); }
     else if (c.type === 'potion') heal(s, p, V.potion, 'potion');
     else if (c.type === 'bouclier') { p.shield = true; fx(s, p.idx, 'BOUCLIER', 'shield'); }
+    else if (c.type === 'impact') { p.flags.impact = true; fx(s, p.idx, '+3 dégâts', 'buff'); }
+    else if (c.type === 'recharge') { p.cd.tir = 0; p.cd.propulsion = 0; fx(s, p.idx, 'RECHARGE', 'buff'); log(s, `Les compétences de ${p.name} sont rechargées.`, p.idx); }
+    else if (c.type === 'minage') { p.flags.minage = true; fx(s, p.idx, 'MINAGE', 'buff'); }
+    else if (c.type === 'pillage') {
+      const n = Math.min(PILLAGE, o.gold);
+      o.gold -= n; p.gold += n;
+      fx(s, p.idx, `+${n} or`, 'gold'); if (n) fx(s, o.idx, `-${n} or`, 'dmg');
+      log(s, `${p.name} vole ${n} or à ${o.name}.`, p.idx);
+    } else if (c.type === 'entrave') { o.entrave = ENTRAVE; fx(s, o.idx, `-${ENTRAVE} cases`, 'buff'); log(s, `${o.name} est entravé : -${ENTRAVE} à son prochain déplacement.`, p.idx); }
     return true;
   }
 
@@ -456,11 +524,12 @@ const Kamy = (() => {
     if (!canReroll(s, p)) return false;
     const i = p.hand.findIndex(c => c.type === 'relance');
     p.discard.push(p.hand.splice(i, 1)[0]); p.flags.special = true;
+    p.stats.played.relance = (p.stats.played.relance || 0) + 1;
     const old = s.pending.value; s.pending.value = pick(s, s.pending.card.faces); s.pending.rerolled = true;
     log(s, `${p.name} relance : ${old} devient ${s.pending.value}.`, p.idx);
     return true;
   }
-  const stepsFor = (p, value) => Math.max(1, value + p.flags.mod) + (p.flags.propulsion ? V.propulsion : 0);
+  const stepsFor = (p, value) => Math.max(1, value + p.flags.mod - (p.entrave || 0)) + (p.flags.propulsion ? V.propulsion : 0);
 
   function passHome(s, p) {
     log(s, `${p.name} passe par sa base.`, p.idx);
@@ -471,6 +540,8 @@ const Kamy = (() => {
 
   function commitMove(s, p) {
     const steps = stepsFor(p, s.pending.value);
+    if (p.entrave) { log(s, `${p.name} est entravé : -${p.entrave}.`, p.idx); p.entrave = 0; }
+    s.lastSteps = steps;
     const o = other(s, p), path = [];
     let passed = false;
     for (let k = 1; k <= steps; k++) {
@@ -486,6 +557,12 @@ const Kamy = (() => {
   function resolveLanding(s, p) {
     const o = other(s, p), t = TILES[p.pos], res = { tile: t };
     if (s.winner) return res;
+    if (p.flags.minage) {
+      gainGold(s, p, s.lastSteps || 0, 'minage');
+      log(s, `Minage : la case d'arrivée de ${p.name} est sans effet.`, p.idx);
+      res.mined = true;
+      return res;
+    }
     if (p.pos === o.pos) { damage(s, p, o, p.ap * 2, 'Attaque directe', true); if (s.winner) return res; }
     switch (t) {
       case 'base':
@@ -535,7 +612,7 @@ const Kamy = (() => {
       p.gold -= V.merchantAp; p.ap += 1; fx(s, p.idx, '+1 AP', 'buff'); log(s, `${p.name} achète +1 AP au marchand.`, p.idx);
       return true;
     }
-    if (!SPECIALS[choice] || p.gold < V.merchantCard || p.hand.length >= V.handMax) return false;
+    if (!SPECIALS[choice] || !p.loadout.includes(choice) || p.gold < V.merchantCard || p.hand.length >= V.handMax) return false;
     p.gold -= V.merchantCard; p.hand.push(makeSpecial(s, choice));
     log(s, `${p.name} achète la carte ${SPECIALS[choice].name} au marchand.`, p.idx);
     return true;
@@ -585,24 +662,46 @@ const Kamy = (() => {
     let best = null;
     for (const c of p.hand.filter(isMove)) {
       let sc = 0;
-      for (const f of c.faces) sc += landingScore(s, p, simulateMove(s, p, Math.max(1, f)));
+      for (const f of c.faces) sc += landingScore(s, p, simulateMove(s, p, stepsFor(p, f)));
       sc = sc / c.faces.length - (c.faces.length === 1 ? 0.01 : 0);
       if (!best || sc > best.sc) best = { c, sc };
     }
-    const plan = { card: best.c.id, active: null, special: null };
+    const plan = { card: best.c.id, active: null, special: null, specialFirst: false };
     const fixed = best.c.faces.length === 1 ? best.c.faces[0] : null;
-    if (canUseActive(s, p, 'tir')) plan.active = 'tir';
-    else if (fixed != null && canUseActive(s, p, 'propulsion') && simulateMove(s, p, fixed + V.propulsion).pos === o.pos) plan.active = 'propulsion';
     const has = t => p.hand.find(c => c.type === t);
-    const extra = plan.active === 'propulsion' ? V.propulsion : 0;
-    if (p.hp <= 20 && has('potion')) plan.special = has('potion').id;
-    else if (!p.shield && has('bouclier')) plan.special = has('bouclier').id;
-    else if (fixed != null) {
-      for (const [t, d] of [['plus', 1], ['moins', -1]]) {
-        if (has(t) && simulateMove(s, p, Math.max(1, fixed + d) + extra).pos === o.pos) { plan.special = has(t).id; break; }
+    // Part des résultats de la carte choisie qui infligent des dégâts en se déplaçant.
+    const hits = best.c.faces.filter(f => {
+      const m = simulateMove(s, p, stepsFor(p, f));
+      return m.passOpp || m.pos === o.pos || (TILES[m.pos] === 'banniere' && dist(m.pos, o.pos) <= V.bannerRange);
+    }).length / best.c.faces.length;
+    if (canUseActive(s, p, 'tir')) plan.active = 'tir';
+    else if (has('recharge') && p.cd.tir > 0 && !p.flags.active && dist(p.pos, o.pos) <= V.tirRange) {
+      plan.special = has('recharge').id; plan.active = 'tir'; plan.specialFirst = true;
+    } else if (fixed != null && canUseActive(s, p, 'propulsion') && simulateMove(s, p, stepsFor(p, fixed) + V.propulsion).pos === o.pos) plan.active = 'propulsion';
+    if (!plan.special) {
+      const extra = plan.active === 'propulsion' ? V.propulsion : 0;
+      let nudge = null;
+      if (fixed != null) {
+        for (const [t, d] of [['plus', 1], ['moins', -1]]) {
+          if (has(t) && simulateMove(s, p, Math.max(1, fixed + d - (p.entrave || 0)) + extra).pos === o.pos) { nudge = has(t); break; }
+        }
       }
+      if (p.hp <= 20 && has('potion')) plan.special = has('potion').id;
+      else if (hits >= 0.5 && has('impact')) plan.special = has('impact').id;
+      else if (nudge) plan.special = nudge.id;
+      else if (!p.shield && has('bouclier')) plan.special = has('bouclier').id;
+      else if (o.gold >= PILLAGE && has('pillage')) plan.special = has('pillage').id;
+      else if (best.sc <= 0 && has('minage')) plan.special = has('minage').id;
+      else if (!o.entrave && has('entrave')) plan.special = has('entrave').id;
     }
     return plan;
+  }
+  // Le bot relance un résultat nettement moins bon que la moyenne de la carte.
+  function botWantsReroll(s, p) {
+    if (!canReroll(s, p)) return false;
+    const pend = s.pending, sc = f => landingScore(s, p, simulateMove(s, p, stepsFor(p, f)));
+    const moyenne = pend.card.faces.reduce((a, f) => a + sc(f), 0) / pend.card.faces.length;
+    return sc(pend.value) < moyenne - 1;
   }
   function botCritterCard(s, p, tile) {
     const cr = CRITTERS[tile];
@@ -612,7 +711,10 @@ const Kamy = (() => {
   }
   function botMerchant(s, p) {
     if (p.gold >= V.merchantAp) return 'ap';
-    if (p.gold >= V.merchantCard && p.hand.length < V.handMax) return p.hp <= 20 ? 'potion' : 'bouclier';
+    if (p.gold >= V.merchantCard && p.hand.length < V.handMax) {
+      const pref = p.hp <= 20 ? ['potion', 'bouclier'] : ['bouclier', 'impact', 'potion'];
+      return pref.find(t => p.loadout.includes(t)) || p.loadout[0];
+    }
     return null;
   }
   function botBase(s, p) {
@@ -627,10 +729,12 @@ const Kamy = (() => {
   function runBotTurn(s) {
     startTurn(s);
     const p = cur(s), plan = botPlan(s, p);
+    if (plan.special && plan.specialFirst) playSpecial(s, p, plan.special);
     if (plan.active) useActive(s, p, plan.active);
     if (s.winner) return;
-    if (plan.special) playSpecial(s, p, plan.special);
+    if (plan.special && !plan.specialFirst) playSpecial(s, p, plan.special);
     playMove(s, p, plan.card);
+    if (botWantsReroll(s, p)) reroll(s, p);
     commitMove(s, p);
     if (s.winner) return;
     const land = resolveLanding(s, p);
@@ -642,10 +746,10 @@ const Kamy = (() => {
   }
 
   return {
-    N, TILES, TP, CRITTERS, V, BASE_SKILLS, LEVEL_COST, SPECIALS, dist, cur, other,
+    N, TILES, TP, CRITTERS, V, BASE_SKILLS, LEVEL_COST, SPECIALS, DEFAULT_LOADOUT, LOADOUT_SIZE, validLoadout, dist, cur, other,
     createGame, startTurn, canUseActive, useActive, playSpecial, playMove, canReroll, reroll, stepsFor, commitMove,
     resolveLanding, winChance, critterRoll, merchantBuy, upgradeCost, baseUpgrade, endTurn,
-    botPlan, botCritterCard, botMerchant, botBase, runBotTurn,
+    botPlan, botWantsReroll, botCritterCard, botMerchant, botBase, runBotTurn,
   };
 })();
 /* ENGINE:END */
@@ -738,7 +842,7 @@ function renderHud() {
     bar.style.width = (100 * p.hp / p.maxHp) + '%';
     bar.style.background = p.hp <= 10 ? 'var(--danger)' : p.hp <= 20 ? 'var(--gold)' : 'var(--heal)';
     $(`#${k}Ap`).textContent = p.ap; $(`#${k}Gold`).textContent = p.gold;
-    $(`#${k}Shield`).textContent = p.shield ? '⬡ bouclier' : '';
+    $(`#${k}Shield`).textContent = (p.shield ? '⬡ bouclier ' : '') + (p.entrave ? `entravé -${p.entrave}` : '');
     $(`#${k}Base`).innerHTML = pips(p);
   }
   const b = bot();
@@ -754,7 +858,7 @@ function cardPlayable(c) {
   const P = me();
   if (ui.phase === 'choose') {
     if (c.kind === 'move') return true;
-    return !P.flags.special && c.type !== 'relance' && !(c.type === 'bouclier' && P.shield);
+    return !P.flags.special && c.type !== 'relance' && !(c.type === 'bouclier' && P.shield) && !(c.type === 'entrave' && bot().entrave);
   }
   if (ui.phase === 'critter') return c.kind === 'move';
   return false;
@@ -797,6 +901,8 @@ function renderAll() {
   if (ui.phase !== 'bot') {
     if (P.flags.mod) eff.push(`${P.flags.mod > 0 ? '+' : ''}${P.flags.mod} au déplacement`);
     if (P.flags.propulsion) eff.push('Propulsion +2');
+    if (P.flags.impact) eff.push('Impact : +3 par dégât');
+    if (P.flags.minage) eff.push('Minage : or = déplacement');
   }
   $('#effects').textContent = eff.join(' · ');
   const bn = $('#banner');
@@ -852,7 +958,7 @@ function onTimeout() {
   const P = me();
   if (ui.phase === 'choose') {
     const c = P.hand.find(x => x.kind === 'move');
-    toast('Temps écoulé : carte jouée automatiquement.');
+    toast('Temps écoulé : carte jouée automatiquement.'); ui.timeouts++;
     if (c) playCard(c.id);
   } else if (ui.phase === 'reroll') proceedMove();
   else if (ui.phase === 'critter') {
@@ -885,8 +991,8 @@ function showCritterResult(tile, r) {
 }
 function showMerchantPanel() {
   const P = me(), V = Kamy.V, full = P.hand.length >= V.handMax;
-  const items = Object.entries(Kamy.SPECIALS).map(([k, s]) =>
-    `<button data-buy="${k}" ${P.gold < V.merchantCard || full ? 'disabled' : ''}>${s.name} · ${V.merchantCard} or</button>`).join('');
+  const items = P.loadout.map(k =>
+    `<button data-buy="${k}" ${P.gold < V.merchantCard || full ? 'disabled' : ''}>${Kamy.SPECIALS[k].name} · ${V.merchantCard} or</button>`).join('');
   showPanel(`<h3>MARCHAND</h3><p>Tu as <b>${P.gold} or</b>. Un seul achat.${full ? ' Main pleine : pas de carte.' : ''}</p>
     <div class="shop">${items}<button data-buy="ap" ${P.gold < V.merchantAp ? 'disabled' : ''}>+1 AP · ${V.merchantAp} or</button></div>
     <div class="btns"><button id="leave">Partir</button></div>`);
@@ -984,6 +1090,7 @@ function playCard(id) {
     if (c.type === 'relance') return toast('La Relance se joue juste après un lancer variable.');
     if (P.flags.special) return toast('Une seule carte spéciale par tour.');
     if (c.type === 'bouclier' && P.shield) return toast('Ton bouclier est déjà actif.');
+    if (c.type === 'entrave' && bot().entrave) return toast('Le bot est déjà entravé.');
     Kamy.playSpecial(G, P, id); flushFx(); renderAll();
     return;
   }
@@ -1004,9 +1111,10 @@ async function animatePath(p, path) {
 async function proceedMove() {
   if (ui.phase !== 'choose' && ui.phase !== 'reroll') return;
   stopTimer(); hidePanel(); ui.phase = 'moving'; renderAll();
-  const P = me();
+  const P = me(), g = G;
   const m = Kamy.commitMove(G, P);
   await animatePath(P, m.path);
+  if (G !== g) return;
   flushFx(); renderAll();
   if (G.winner) return endGame();
   const land = Kamy.resolveLanding(G, P);
@@ -1027,7 +1135,9 @@ async function resolveCritter(cardId) {
   const r = Kamy.critterRoll(G, P, tile, cardId);
   if (r.card) showRoll(P, { card: r.card, value: r.value }, 'critter');
   flushFx(); renderAll(); showCritterResult(tile, r);
+  const g = G;
   await wait(1400);
+  if (G !== g) return;
   hidePanel();
   if (G.winner) return endGame();
   finishTurn();
@@ -1054,16 +1164,23 @@ $('#actProp').onclick = () => clickActive('propulsion');
 // --- Tour du bot ---
 async function botTurn() {
   ui.phase = 'bot'; renderAll();
-  const p = bot();
-  await wait(700);
+  const p = bot(), g = G;
+  const pause = async ms => { await wait(ms); return G === g && !g.winner; };
+  if (!(await pause(700))) return;
   const plan = Kamy.botPlan(G, p);
-  if (plan.active) { Kamy.useActive(G, p, plan.active); flushFx(); renderAll(); if (G.winner) return endGame(); await wait(700); }
-  if (plan.special) { Kamy.playSpecial(G, p, plan.special); flushFx(); renderAll(); await wait(700); }
+  if (plan.special && plan.specialFirst) { Kamy.playSpecial(G, p, plan.special); flushFx(); renderAll(); if (!(await pause(700))) return; }
+  if (plan.active) { Kamy.useActive(G, p, plan.active); flushFx(); renderAll(); if (G.winner) return endGame(); if (!(await pause(700))) return; }
+  if (plan.special && !plan.specialFirst) { Kamy.playSpecial(G, p, plan.special); flushFx(); renderAll(); if (!(await pause(700))) return; }
   const pending = Kamy.playMove(G, p, plan.card);
   showRoll(p, pending); renderAll();
-  await wait(800);
+  if (!(await pause(800))) return;
+  if (Kamy.botWantsReroll(G, p)) {
+    Kamy.reroll(G, p); showRoll(p, G.pending, 'relancé'); renderAll();
+    if (!(await pause(700))) return;
+  }
   const m = Kamy.commitMove(G, p);
   await animatePath(p, m.path);
+  if (G !== g) return;
   flushFx(); renderAll();
   if (G.winner) return endGame();
   const land = Kamy.resolveLanding(G, p);
@@ -1072,44 +1189,114 @@ async function botTurn() {
   setTimeout(() => $('#pawnB').classList.remove('warp'), 500);
   if (G.winner) return endGame();
   if (land.panel === 'critter') {
-    showCritterPanel(land.tile, true); await wait(900);
+    showCritterPanel(land.tile, true);
+    if (!(await pause(900))) return;
     const r = Kamy.critterRoll(G, p, land.tile, Kamy.botCritterCard(G, p, land.tile));
     if (r.card) showRoll(p, { card: r.card, value: r.value }, 'critter');
     flushFx(); renderAll(); showCritterResult(land.tile, r);
-    await wait(1200); hidePanel();
+    await wait(1200);
+    if (G !== g) return;
+    hidePanel();
     if (G.winner) return endGame();
   } else if (land.panel === 'merchant') {
     const ch = Kamy.botMerchant(G, p);
     if (ch && Kamy.merchantBuy(G, p, ch)) { flushFx(); renderAll(); toast('Le bot achète au marchand.'); }
-    await wait(500);
+    if (!(await pause(500))) return;
   } else if (land.panel === 'base') {
     const k = Kamy.botBase(G, p);
     if (k && Kamy.baseUpgrade(G, p, k)) { renderAll(); toast(`Le bot améliore ${Kamy.BASE_SKILLS[k].name}.`); }
-    await wait(500);
+    if (!(await pause(500))) return;
   }
-  await wait(300);
+  if (!(await pause(300))) return;
   finishTurn();
 }
+
+// --- Suivi des parties (plan de tracking v0) : tout reste dans ce navigateur ---
+const store = {
+  get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch (_) { return d; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (_) { /* stockage indisponible */ } },
+};
+const STORE_PARTIES = 'kamy.parties.v1';
+let records = store.get(STORE_PARTIES, []);
+if (!Array.isArray(records)) records = [];
+let testerId = store.get('kamy.testeur', null);
+if (!testerId) { testerId = Math.random().toString(36).slice(2, 8); store.set('kamy.testeur', testerId); }
+let loadout = store.get('kamy.deck', null);
+if (!Kamy.validLoadout(loadout)) loadout = Kamy.DEFAULT_LOADOUT.slice();
+let currentRecord = null;
+
+function recordGame(abandon) {
+  const P = me(), B = bot();
+  const won = !abandon && G.winner === P;
+  currentRecord = {
+    testeur: testerId, version: APP_VERSION, date: new Date().toISOString(),
+    premier: G.first === 0 ? 'testeur' : 'bot', vainqueur: abandon ? null : (won ? 'testeur' : 'bot'),
+    duree: Math.round((Date.now() - ui.startedAt) / 1000), tours: P.stats.turns, toursBot: B.stats.turns,
+    hpVainqueur: abandon || !G.winner ? null : G.winner.hp, deck: P.loadout.slice(), deckBot: B.loadout.slice(),
+    piochees: Object.assign({}, P.stats.drawn), jouees: Object.assign({}, P.stats.played),
+    toursExpires: ui.timeouts, abandon: !!abandon, rejouer: null,
+  };
+  records.push(currentRecord); store.set(STORE_PARTIES, records);
+}
+function answerReplay(yes) {
+  if (currentRecord && currentRecord.rejouer == null) { currentRecord.rejouer = yes; store.set(STORE_PARTIES, records); }
+}
+
+// --- Préparation du duel ---
+function randomLoadout() {
+  const all = Object.keys(Kamy.SPECIALS);
+  for (let i = all.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [all[i], all[j]] = [all[j], all[i]]; }
+  return all.slice(0, Kamy.LOADOUT_SIZE);
+}
+function showScreen(id) {
+  ['#startScreen', '#prepScreen', '#statsScreen', '#endScreen'].forEach(q => $(q).classList.toggle('show', q === id));
+}
+function showPrep() { ui.prepSel = loadout.slice(); renderPrep(); showScreen('#prepScreen'); }
+function renderPrep() {
+  const n = Kamy.LOADOUT_SIZE;
+  $('#prepGrid').innerHTML = Object.entries(Kamy.SPECIALS).map(([k, sp]) => {
+    const on = ui.prepSel.includes(k);
+    return `<button class="pcard${on ? ' on' : ''}" data-k="${k}" aria-pressed="${on}"><span class="sicon">${sp.icon}</span><span class="sname">${sp.name}</span><span class="pdesc">${sp.desc}</span></button>`;
+  }).join('');
+  $('#prepCount').textContent = `${ui.prepSel.length} / ${n} cartes choisies`;
+  $('#goBtn').disabled = ui.prepSel.length !== n;
+  $('#prepGrid').querySelectorAll('.pcard').forEach(b => b.onclick = () => {
+    const k = b.dataset.k, i = ui.prepSel.indexOf(k);
+    if (i >= 0) ui.prepSel.splice(i, 1);
+    else if (ui.prepSel.length < n) ui.prepSel.push(k);
+    renderPrep();
+  });
+}
+$('#goBtn').onclick = () => {
+  if (!Kamy.validLoadout(ui.prepSel)) return;
+  loadout = ui.prepSel.slice(); store.set('kamy.deck', loadout); newGame();
+};
+$('#prepBack').onclick = () => showScreen('#startScreen');
 
 // --- Début et fin ---
 async function newGame() {
   ui.discovery = $('#discovery').checked;
-  G = Kamy.createGame({});
-  ui.phase = 'idle'; ui.sel = null; ui.override = {}; ui.startedAt = Date.now();
-  $('#startScreen').classList.remove('show'); $('#endScreen').classList.remove('show');
+  G = Kamy.createGame({ loadouts: [loadout, randomLoadout()] });
+  const g = G;
+  ui.phase = 'idle'; ui.sel = null; ui.override = {}; ui.startedAt = Date.now(); ui.timeouts = 0; currentRecord = null;
+  showScreen(null); $('#rules').classList.remove('show');
   $('#rollWho').textContent = 'Dernier lancer'; $('#rollLbl').textContent = '·'; $('#rollVal').textContent = '·'; $('#rollVal').style.background = '';
   renderAll();
   const [a, b] = G.firstRolls;
+  const deckBot = bot().loadout.map(k => Kamy.SPECIALS[k].name).join(', ');
   showPanel(`<h3>QUI COMMENCE ?</h3><div class="faces"><div class="face win">${a}</div><div class="face" style="background:var(--bot);color:var(--bg)">${b}</div></div>
-    <p>Toi : ${a} · Bot : ${b}</p><p class="big ${G.current === 0 ? 'win-t' : ''}" style="font-size:20px">${G.current === 0 ? 'Tu commences' : 'Le bot commence'}</p>`);
-  await wait(1900);
+    <p>Toi : ${a} · Bot : ${b}</p><p class="big ${G.current === 0 ? 'win-t' : ''}" style="font-size:20px">${G.current === 0 ? 'Tu commences' : 'Le bot commence'}</p>
+    <p style="color:var(--muted);font-size:12px">Cartes du bot : ${deckBot}</p>`);
+  await wait(2200);
+  if (G !== g) return;
   hidePanel(); nextTurn();
 }
 function endGame() {
   if (ui.phase === 'over') return;
   stopTimer(); ui.phase = 'over'; hidePanel(); renderAll();
+  recordGame(false);
   const won = G.winner === me();
-  const secs = Math.round((Date.now() - ui.startedAt) / 1000);
+  const secs = currentRecord.duree;
   const dealt = Object.entries(me().stats.dealt).map(([k, v]) => `${k} ${v}`).join(', ') || 'aucun';
   $('#endRes').textContent = won ? 'VICTOIRE' : 'DÉFAITE';
   $('#endRes').className = 'res ' + (won ? 'win-t' : 'lose-t');
@@ -1117,13 +1304,69 @@ function endGame() {
     Tes dégâts : ${dealt}<br><br>
     <b>RÉCOMPENSES (simulation)</b><br>
     ${won ? '+30 points de ligue · Bronze 5<br>Coffre rare, déverrouillage en 3 h' : '0 point de ligue<br>Coffre commun, déverrouillage en 15 min'}`;
-  setTimeout(() => $('#endScreen').classList.add('show'), 900);
+  const g = G;
+  setTimeout(() => { if (G === g) showScreen('#endScreen'); }, 900);
 }
-$('#startBtn').onclick = newGame;
-$('#againBtn').onclick = newGame;
-$('#rulesBtn').onclick = () => $('#rules').classList.add('show');
-$('#help').onclick = () => $('#rules').classList.add('show');
+function abandonGame() {
+  if (!G || ui.phase === 'over') return;
+  stopTimer(); ui.phase = 'over'; hidePanel();
+  recordGame(true);
+  G = null; renderAll();
+  $('#rules').classList.remove('show'); showScreen('#startScreen');
+}
+$('#startBtn').onclick = showPrep;
+$('#replayYes').onclick = () => { answerReplay(true); newGame(); };
+$('#replayNo').onclick = () => { answerReplay(false); showScreen('#startScreen'); };
+$('#rulesBtn').onclick = () => openRules();
+$('#help').onclick = () => openRules();
+function openRules() { $('#quitBtn').hidden = !(G && ui.phase !== 'over'); $('#rules').classList.add('show'); }
 $('#rulesClose').onclick = () => $('#rules').classList.remove('show');
+$('#quitBtn').onclick = abandonGame;
+
+// --- Écran des statistiques ---
+const pctTxt = (a, b) => (b ? Math.round(100 * a / b) + ' %' : '·');
+function median(a) { if (!a.length) return null; const b = a.slice().sort((x, y) => x - y); return b[Math.floor(b.length / 2)]; }
+function showStats() {
+  const R = records, fin = R.filter(r => !r.abandon && r.vainqueur);
+  const answered = R.filter(r => r.rejouer != null), yes = answered.filter(r => r.rejouer).length;
+  const wins = a => a.filter(r => r.vainqueur === 'testeur').length;
+  const meFirst = fin.filter(r => r.premier === 'testeur'), botFirst = fin.filter(r => r.premier === 'bot');
+  const durs = fin.map(r => r.duree), inRange = durs.filter(d => d >= 120 && d <= 300).length;
+  const md = median(durs), testeurs = new Set(R.map(r => r.testeur)).size;
+  const expires = R.reduce((a, r) => a + (r.toursExpires || 0), 0);
+  $('#statsSummary').innerHTML = `<b>RÉSUMÉ</b><br>
+    Parties : ${R.length} (dont ${R.length - fin.length} abandonnée${R.length - fin.length > 1 ? 's' : ''}) · ${testeurs} testeur${testeurs > 1 ? 's' : ''}<br>
+    Veulent rejouer : ${pctTxt(yes, answered.length)} (n = ${answered.length})<br>
+    Victoires quand tu commences : ${pctTxt(wins(meFirst), meFirst.length)} (n = ${meFirst.length})<br>
+    Victoires quand le bot commence : ${pctTxt(wins(botFirst), botFirst.length)} (n = ${botFirst.length})<br>
+    Durée médiane : ${md == null ? '·' : `${Math.floor(md / 60)} min ${String(md % 60).padStart(2, '0')} s`} · entre 2 et 5 min : ${pctTxt(inRange, durs.length)}<br>
+    Tours expirés : ${R.length ? (expires / R.length).toFixed(1) : '·'} par partie<br>
+    <span style="color:var(--muted)">Il faut environ 400 parties pour juger l'équilibre à 5 points près.</span>`;
+  const rows = Object.entries(Kamy.SPECIALS).map(([k, sp]) => {
+    const decks = R.filter(r => (r.deck || []).includes(k)).length;
+    const drawn = R.reduce((a, r) => a + ((r.piochees || {})[k] || 0), 0);
+    const played = R.reduce((a, r) => a + ((r.jouees || {})[k] || 0), 0);
+    const withIt = fin.filter(r => ((r.jouees || {})[k] || 0) > 0);
+    return `<tr><td>${sp.name}</td><td>${decks}</td><td>${played} / ${drawn}</td><td>${pctTxt(wins(withIt), withIt.length)} (n = ${withIt.length})</td></tr>`;
+  }).join('');
+  $('#statsCards').innerHTML = `<b>CARTES SPÉCIALES</b><table><tr><th>Carte</th><th>Decks</th><th>Jouées / piochées</th><th>Victoires quand jouée</th></tr>${rows}</table>`;
+  $('#statsDump').style.display = 'none'; $('#statsMsg').textContent = '';
+  $('#statsClear').textContent = 'Effacer'; ui.clearArmed = false;
+  showScreen('#statsScreen');
+}
+$('#statsBtn').onclick = showStats;
+$('#statsClose').onclick = () => showScreen('#startScreen');
+$('#statsCopy').onclick = () => {
+  const json = JSON.stringify(records);
+  const fallback = () => { const t = $('#statsDump'); t.value = json; t.style.display = 'block'; t.select(); $('#statsMsg').textContent = 'Sélectionne le texte et copie-le.'; };
+  try {
+    navigator.clipboard.writeText(json).then(() => { $('#statsMsg').textContent = `${records.length} parties copiées.`; }, fallback);
+  } catch (_) { fallback(); }
+};
+$('#statsClear').onclick = () => {
+  if (!ui.clearArmed) { ui.clearArmed = true; $('#statsClear').textContent = "Confirmer l'effacement"; return; }
+  records = []; store.set(STORE_PARTIES, records); showStats(); $('#statsMsg').textContent = 'Statistiques effacées.';
+};
 $('#log').onclick = () => {
   const f = $('#logFull');
   if (f.classList.toggle('show')) f.innerHTML = G ? G.log.slice(-14).map(e => `<div class="${e.who === 0 ? 'me' : ''}" style="color:${e.who === 0 ? '#9ff3ff' : e.who === 1 ? '#ff9fe9' : ''}">${e.txt}</div>`).join('') : '';
@@ -1131,7 +1374,7 @@ $('#log').onclick = () => {
 $('#logFull').onclick = () => $('#logFull').classList.remove('show');
 
 // Accès pour les tests automatiques.
-window.__kamy = { get G() { return G; }, ui, playCard, proceedMove, resolveCritter, finishTurn, newGame };
+window.__kamy = { get G() { return G; }, get records() { return records; }, ui, playCard, proceedMove, resolveCritter, finishTurn, newGame };
 </script>
 </body>
 </html>
