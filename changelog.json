@@ -1,5 +1,12 @@
 [
   {
+    "version": "0.2.4",
+    "date": "2026-11-26",
+    "notes": [
+      "Le prototype demande maintenant une clé avant de s'ouvrir, comme toutes les apps. Aucun changement de jeu."
+    ]
+  },
+  {
     "version": "0.2.3",
     "date": "2026-11-26",
     "notes": [
