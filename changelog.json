@@ -1,5 +1,12 @@
 [
   {
+    "version": "0.2.3",
+    "date": "2026-11-26",
+    "notes": [
+      "Fichiers communs de synchronisation et de mise à jour alignés sur toutes les autres apps. Aucun changement de jeu."
+    ]
+  },
+  {
     "version": "0.2.2",
     "date": "2026-11-26",
     "notes": [
