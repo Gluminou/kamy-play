@@ -154,6 +154,10 @@
   .screen .foot button { min-height: 44px; font-size: 16px; padding: 0 22px; }
   .screen label { font-size: 14px; display: flex; align-items: center; gap: 6px; }
   .screen .ver { margin-left: auto; color: var(--muted); font-size: 11px; }
+  .screen .foot button.ver { min-height: 32px; font-size: 12px; padding: 0 12px; background: none; border: 1px solid var(--line); color: var(--muted); }
+  #versionScreen { overflow: auto; background: var(--bg); z-index: 61; }
+  #versionScreen .au { padding-bottom: 90px; --au-accent: var(--me); }
+  #versionScreen .as { --au-accent: var(--me); }
   #rules .box { font-size: 12.5px; }
   #rules ul { margin: 4px 0; padding-left: 16px; }
   #endScreen { text-align: center; }
@@ -255,8 +259,14 @@
       <label><input type="checkbox" id="discovery" checked> Mode découverte (25 s par tour au lieu de 15 s)</label>
       <button id="rulesBtn">Règles</button>
       <button id="statsBtn">Statistiques</button>
-      <span class="ver" id="verLbl"></span>
+      <button class="ver" id="verLbl" type="button" title="Version, synchronisation et nouveautés"></button>
     </div>
+  </div>
+
+  <div id="versionScreen" class="screen">
+    <h2>VERSION, SYNCHRONISATION ET NOUVEAUTÉS</h2>
+    <div id="app-updates"></div>
+    <div class="foot"><button class="primary" id="versionClose">Fermer</button></div>
   </div>
 
   <div id="rules" class="screen">
@@ -322,7 +332,9 @@
 </div>
 
 <script>
-const APP_VERSION = "0.2.0";
+const APP_RELEASE="0.2.2";
+const APP_DATE="2026-11-26";
+const APP_VERSION="0.2.2";
 
 /* ENGINE:START */
 // Moteur de règles de Kamy : aucune dépendance au navigateur, pour pouvoir le simuler.
@@ -1225,6 +1237,21 @@ let loadout = store.get('kamy.deck', null);
 if (!Kamy.validLoadout(loadout)) loadout = Kamy.DEFAULT_LOADOUT.slice();
 let currentRecord = null;
 
+// Synchronisation entre appareils (sync.js), par le dépôt privé Gluminou/kamy-play-data :
+// identifiant de testeur, deck choisi et parties jouées. Quand un autre appareil en envoie,
+// on relit ce qui est gardé en mémoire, sinon le prochain enregistrement d'ici l'effacerait.
+const APP_SYNC = { app: 'kamy-play', keys: ['kamy.testeur', 'kamy.deck', STORE_PARTIES] };
+window.addEventListener('storage', e => {
+  if (e.key === STORE_PARTIES) {
+    const r = store.get(STORE_PARTIES, []); records = Array.isArray(r) ? r : [];
+    if (currentRecord) currentRecord = records.find(x => x.date === currentRecord.date && x.testeur === currentRecord.testeur) || null;
+  } else if (e.key === 'kamy.testeur') {
+    testerId = store.get('kamy.testeur', testerId) || testerId;
+  } else if (e.key === 'kamy.deck') {
+    const d = store.get('kamy.deck', null); if (Kamy.validLoadout(d)) loadout = d;
+  }
+});
+
 function recordGame(abandon) {
   const P = me(), B = bot();
   const won = !abandon && G.winner === P;
@@ -1355,6 +1382,8 @@ function showStats() {
   showScreen('#statsScreen');
 }
 $('#statsBtn').onclick = showStats;
+$('#verLbl').onclick = () => $('#versionScreen').classList.add('show');
+$('#versionClose').onclick = () => $('#versionScreen').classList.remove('show');
 $('#statsClose').onclick = () => showScreen('#startScreen');
 $('#statsCopy').onclick = () => {
   const json = JSON.stringify(records);
@@ -1376,5 +1405,7 @@ $('#logFull').onclick = () => $('#logFull').classList.remove('show');
 // Accès pour les tests automatiques.
 window.__kamy = { get G() { return G; }, get records() { return records; }, ui, playCard, proceedMove, resolveCritter, finishTurn, newGame };
 </script>
+<script src="sync.js"></script>
+<script src="updates.js"></script>
 </body>
 </html>

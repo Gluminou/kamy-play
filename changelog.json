@@ -1,5 +1,13 @@
 [
   {
+    "version": "0.2.2",
+    "date": "2026-11-26",
+    "notes": [
+      "Synchronisation entre appareils : identifiant de testeur, deck et parties jouées se retrouvent sur l'iPhone et l'ordinateur, une fois la clé GitHub collée dans Version, synchronisation et nouveautés.",
+      "Retour du bouton Rechercher une mise à jour et de la liste des nouveautés, effacés par la publication automatique du 21 novembre."
+    ]
+  },
+  {
     "version": "0.2.1",
     "date": "2026-11-21",
     "notes": [
